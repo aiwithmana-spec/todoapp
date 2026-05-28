@@ -76,62 +76,64 @@ export default function QuoteBuilder() {
   }
 
   return (
-    <div>
-      {/* Top nav */}
+    <div className="min-h-screen" style={{ background: "var(--color-surface)" }}>
+      {/* Top nav — full-width dark bar, inner content aligned to editor width */}
       <div
-        className="no-print flex items-center justify-between px-5 h-[52px]"
+        className="no-print sticky top-0 z-50"
         style={{ background: "var(--color-ink)" }}
       >
-        <div className="flex items-center gap-2.5">
-          <span className="text-white font-semibold text-[15px]">NZ Quote Builder AI</span>
-          <span className="text-[#4A4A40] text-[12px]">GST-ready · NZD · Powered by Claude</span>
-        </div>
-        <div className="flex gap-2">
-          <button
-            onClick={() => setPreview(true)}
-            className="px-3 py-1 rounded-full border-[1.5px] border-[var(--color-border)] bg-white text-[var(--color-ink)] text-[12px] font-medium cursor-pointer hover:bg-[var(--color-surface)] transition-colors"
-          >
-            👁 Preview
-          </button>
-          <button
-            onClick={() => { setPreview(true); setTimeout(() => handlePrint(), 400); }}
-            className="px-3 py-1 rounded-full border-[1.5px] text-[12px] font-medium cursor-pointer transition-colors"
-            style={{ background: "var(--color-brand)", color: "#fff", borderColor: "var(--color-brand)" }}
-          >
-            ⬇ Save PDF
-          </button>
+        <div className="max-w-[960px] mx-auto px-6 h-14 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="text-white font-semibold text-[15px]">NZ Quote Builder AI</span>
+            <span className="hidden sm:inline text-[#4A4A40] text-[12px]">GST-ready · NZD · Powered by Claude</span>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setPreview(true)}
+              className="px-4 py-1.5 rounded-full border-[1.5px] border-[var(--color-border)] bg-white text-[var(--color-ink)] text-[12px] font-medium cursor-pointer hover:bg-[var(--color-surface)] transition-colors"
+            >
+              👁 Preview
+            </button>
+            <button
+              onClick={() => { setPreview(true); setTimeout(() => handlePrint(), 400); }}
+              className="px-4 py-1.5 rounded-full border-[1.5px] text-[12px] font-medium cursor-pointer transition-colors"
+              style={{ background: "var(--color-brand)", color: "#fff", borderColor: "var(--color-brand)" }}
+            >
+              ⬇ Save PDF
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Editor */}
-      <div className="no-print max-w-[860px] mx-auto px-3.5 py-5">
+      {/* Editor — same max-width as nav inner content */}
+      <div className="no-print max-w-[960px] mx-auto px-6 py-6">
         {/* Quote header row */}
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-5">
           <div>
-            <div className="text-[20px] font-medium" style={{ fontFamily: "var(--font-dm-mono,'DM Mono',monospace)" }}>
+            <div className="text-[22px] font-medium" style={{ fontFamily: "var(--font-dm-mono,'DM Mono',monospace)" }}>
               {qNum}{rev > 0 ? ` Rev.${rev}` : ""}
             </div>
-            <div className="text-[12px] text-[var(--color-ink-muted)] mt-0.5">
+            <div className="text-[13px] text-[var(--color-ink-muted)] mt-1">
               Issued {issueDate} · Valid {validUntil}
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             <label className="text-[12px] text-[var(--color-ink-muted)] mb-0">Issue date</label>
             <input
               type="date"
               value={issueDate}
               onChange={(e) => setIssueDate(e.target.value)}
-              style={{ width: 140, padding: "6px 10px" }}
+              style={{ width: 148, padding: "7px 10px" }}
             />
             <button
               onClick={() => setRev((r) => r + 1)}
-              className="px-3 py-1 rounded-full border-[1.5px] border-[var(--color-border)] bg-white text-[12px] font-medium cursor-pointer text-[var(--color-ink-dim)] hover:bg-[var(--color-surface)] transition-colors"
+              className="px-4 py-1.5 rounded-full border-[1.5px] border-[var(--color-border)] bg-white text-[12px] font-medium cursor-pointer text-[var(--color-ink-dim)] hover:bg-[var(--color-surface)] transition-colors"
             >
               + Revision
             </button>
             <button
               onClick={handleReset}
-              className="px-3 py-1 rounded-full border-[1.5px] border-[var(--color-border)] bg-white text-[12px] cursor-pointer text-[var(--color-ink-muted)] hover:bg-[var(--color-surface)] transition-colors"
+              className="px-4 py-1.5 rounded-full border-[1.5px] border-[var(--color-border)] bg-white text-[12px] cursor-pointer text-[var(--color-ink-muted)] hover:bg-[var(--color-surface)] transition-colors"
             >
               Reset
             </button>
@@ -139,12 +141,12 @@ export default function QuoteBuilder() {
         </div>
 
         {/* Tab bar */}
-        <div className="bg-white rounded-2xl border-[1.5px] border-[var(--color-border-strong)] p-2.5 flex gap-1 mb-3.5">
+        <div className="bg-white rounded-2xl border-[1.5px] border-[var(--color-border-strong)] p-2 flex gap-1 mb-4">
           {TABS.map(([id, lbl]) => (
             <button
               key={id}
               onClick={() => setTab(id)}
-              className="px-3.5 py-1.5 rounded-full border-none cursor-pointer text-[13px] font-medium transition-all"
+              className="px-5 py-2 rounded-full border-none cursor-pointer text-[13px] font-medium transition-all"
               style={{
                 background: tab === id ? "var(--color-ink)" : "transparent",
                 color: tab === id ? "#fff" : "var(--color-ink-dim)",
