@@ -1,0 +1,126 @@
+{
+  "name": "WhatsApp Construction Report Bot",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "b3f1a2c4-7d2e-4e9a-9c1a-2f7e8b6d4a10",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "1f1b2c3d-0001-4a1a-8b1a-000000000001",
+      "name": "Webhook1",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        260,
+        300
+      ],
+      "webhookId": "b3f1a2c4-7d2e-4e9a-9c1a-2f7e8b6d4a10"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "{{CLAUDE_API_KEY}}"
+            },
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  model: \"claude-sonnet-4-5\",\n  max_tokens: 1000,\n  messages: [\n    {\n      role: \"user\",\n      content: `You are an assistant that generates Job Service Reports for NZ trade businesses. \nExtract information from the site notes and fill in the template below exactly. \nIf information is missing write N/A.\n\nJOB SERVICE REPORT\nDate: [date]\nJob Number: [job number]  \nTechnician: [name]\nSite Address: [address]\n\nWORK COMPLETED\n[list tasks as bullet points]\n\nTIME ON SITE\nStart: [time]\nFinish: [time]\nTotal: [hours]\n\nMATERIALS USED\n[list materials as bullet points]\n\nJOB STATUS: [COMPLETED or PARTIALLY COMPLETED or FOLLOW-UP REQUIRED]\n\nNEXT STEPS: [next steps]\n\nTechnician Sign-off: ___________________\nCustomer Sign-off:   ___________________\n\nSite notes:\n${$('Webhook1').item.json.body.Body}`\n    }\n  ]\n}) }}",
+        "options": {}
+      },
+      "id": "1f1b2c3d-0002-4a1a-8b1a-000000000002",
+      "name": "Claude API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        480,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.twilio.com/2010-04-01/Accounts/{{TWILIO_ACCOUNT_SID}}/Messages.json",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "From",
+              "value": "whatsapp:+14155238886"
+            },
+            {
+              "name": "To",
+              "value": "={{ $('Webhook1').item.json.body.From }}"
+            },
+            {
+              "name": "Body",
+              "value": "={{ $('Claude API').item.json.content[0].text.slice(0, 1500) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "1f1b2c3d-0003-4a1a-8b1a-000000000003",
+      "name": "Twilio Send",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        700,
+        300
+      ],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "TWILIO_BASIC_AUTH_CREDENTIAL_ID",
+          "name": "Twilio Basic Auth ({{TWILIO_ACCOUNT_SID}} / {{TWILIO_AUTH_TOKEN}})"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook1": {
+      "main": [
+        [
+          {
+            "node": "Claude API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude API": {
+      "main": [
+        [
+          {
+            "node": "Twilio Send",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
