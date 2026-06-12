@@ -1,0 +1,217 @@
+{
+  "name": "NZ Construction Report Generator (Final)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "b3f1a2c4-7d2e-4e9a-9c1a-2f7e8b6d4a10",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "2a1b3c4d-0001-4a1a-8b1a-000000000001",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        260,
+        300
+      ],
+      "webhookId": "b3f1a2c4-7d2e-4e9a-9c1a-2f7e8b6d4a10"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "{{CLAUDE_API_KEY}}"
+            },
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  model: \"claude-sonnet-4-5\",\n  max_tokens: 1000,\n  messages: [\n    {\n      role: \"user\",\n      content: `Generate a Job Service Report for NZ trade business from these notes. Use this exact format:\n\nJOB SERVICE REPORT\nDate: [date]\nTechnician: [name]\nSite Address: [address]\n\nWORK COMPLETED\n[tasks]\n\nTIME ON SITE\nStart: [time]\nFinish: [time]\n\nMATERIALS USED\n[materials]\n\nJOB STATUS: [COMPLETED/PARTIALLY COMPLETED/FOLLOW-UP REQUIRED]\n\nNEXT STEPS: [next steps]\n\nTechnician Sign-off: ___\nCustomer Sign-off: ___\n\nNotes: ${$('Webhook').item.json.body.Body}`\n    }\n  ]\n}) }}",
+        "options": {}
+      },
+      "id": "2a1b3c4d-0002-4a1a-8b1a-000000000002",
+      "name": "Claude API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        480,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const report = $('Claude API').item.json.content[0].text;\nconst today = new Date().toLocaleDateString('en-NZ');\nconst html = `<!DOCTYPE html><html><head><meta charset=\"UTF-8\"><style>body{font-family:Arial,sans-serif;margin:40px;color:#333}.header{border-bottom:3px solid #1a1a2e;padding-bottom:20px;margin-bottom:30px}.company{font-size:24px;font-weight:bold;color:#1a1a2e}.content{white-space:pre-wrap;line-height:1.8}.footer{border-top:1px solid #ccc;margin-top:40px;padding-top:15px;font-size:12px;color:#999}</style></head><body><div class=\"header\"><div class=\"company\">{{COMPANY_NAME}}</div><div>Job Service Report — ${today}</div></div><div class=\"content\">${report}</div><div class=\"footer\">{{COMPANY_NAME}} | {{COMPANY_PHONE}} | {{COMPANY_EMAIL}}</div></body></html>`;\nreturn [{ json: { html } }];"
+      },
+      "id": "2a1b3c4d-0003-4a1a-8b1a-000000000003",
+      "name": "Generate HTML",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        700,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.html2pdf.app/v1/generate",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  html: $json.html,\n  apiKey: \"{{HTML2PDF_API_KEY}}\"\n}) }}",
+        "options": {}
+      },
+      "id": "2a1b3c4d-0004-4a1a-8b1a-000000000004",
+      "name": "Convert to PDF",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        920,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "sendTo": "{{CLIENT_EMAIL}}",
+        "subject": "Job Completion Report",
+        "message": "Please find your Job Completion Report attached.",
+        "options": {
+          "attachmentsUi": {
+            "attachmentsBinary": [
+              {
+                "property": "data"
+              }
+            ]
+          }
+        }
+      },
+      "id": "2a1b3c4d-0005-4a1a-8b1a-000000000005",
+      "name": "Send PDF by Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1140,
+        300
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "GMAIL_OAUTH2_CREDENTIAL_ID",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "2a1b3c4d-0006-4a1a-8b1a-000000000006",
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        260,
+        540
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "sendTo": "{{YOUR_EMAIL}}",
+        "subject": "Workflow Error",
+        "message": "=Error: {{ $json.error.message }}",
+        "options": {}
+      },
+      "id": "2a1b3c4d-0007-4a1a-8b1a-000000000007",
+      "name": "Error Notification Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        480,
+        540
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "GMAIL_OAUTH2_CREDENTIAL_ID",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Claude API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude API": {
+      "main": [
+        [
+          {
+            "node": "Generate HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate HTML": {
+      "main": [
+        [
+          {
+            "node": "Convert to PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to PDF": {
+      "main": [
+        [
+          {
+            "node": "Send PDF by Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Error Notification Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
