@@ -110,40 +110,15 @@
     },
     {
       "parameters": {
-        "method": "POST",
-        "url": "https://api.html2pdf.app/v1/generate",
-        "sendBody": true,
-        "contentType": "json",
-        "specifyBody": "keypair",
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "html",
-              "value": "={{ $json.html }}"
-            },
-            {
-              "name": "apiKey",
-              "value": "{{HTML2PDF_API_KEY}}"
-            },
-            {
-              "name": "fileName",
-              "value": "job-report.pdf"
-            }
-          ]
-        },
-        "options": {
-          "response": {
-            "response": {
-              "responseFormat": "file",
-              "outputPropertyName": "data"
-            }
-          }
-        }
+        "operation": "toPdf",
+        "html": "={{ $('Generate HTML').item.json.html }}",
+        "fileName": "=job-report-{{ new Date().toLocaleDateString('en-NZ') }}.pdf",
+        "options": {}
       },
       "id": "1f1b2c3d-0005-4a1a-8b1a-000000000005",
       "name": "Convert to PDF",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
+      "type": "n8n-nodes-base.htmlToPdf",
+      "typeVersion": 1,
       "position": [
         940,
         420
